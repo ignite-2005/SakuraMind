@@ -49,7 +49,7 @@ export function EmotionDashboard() {
   const capturedSpectrogramRef = useRef<string | undefined>(undefined)
   const prevRecordingRef = useRef(false)
 
-  const sessionActive = isRecording || isAnalyzing || holdSpectrogram
+  const sessionActive = isRecording || isAnalyzing || holdSpectrogram || !!result
 
   useEffect(() => {
     if (isRecording) {
@@ -236,13 +236,18 @@ export function EmotionDashboard() {
               )}
             </div>
           </div>
-          <div className="min-h-[180px] overflow-hidden rounded-xl">
-            <Spectrogram
-              ref={spectrogramRef}
-              analyser={analyser}
-              isRecording={isRecording}
-              sessionActive={sessionActive}
-            />
+          <div className="min-h-[180px] overflow-hidden rounded-xl relative">
+            {(!isRecording && !isAnalyzing && result) ? (
+              // @ts-ignore
+              <img src={`/api/mel?t=${result._t || Date.now()}`} alt="Mel Spectrogram" className="h-52 w-full object-cover" style={{ width: "100%", height: "208px" }} />
+            ) : (
+              <Spectrogram
+                ref={spectrogramRef}
+                analyser={analyser}
+                isRecording={isRecording}
+                sessionActive={sessionActive}
+              />
+            )}
           </div>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             {sessionActive && !isRecording

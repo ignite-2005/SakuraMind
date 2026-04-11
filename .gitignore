@@ -1,0 +1,16 @@
+# Datasets and models
+Actor_*
+CREMA-D-master/
+dataset/
+spectrograms/
+venv/
+__pycache__/
+
+# temporary files
+audio.wav
+mel.png
+history.txt
+
+# model weights
+*.pth
+*.pt

@@ -22,6 +22,7 @@ interface AnalysisResult {
   pitchVariation: "high" | "normal" | "low"
   speechEnergy: "high" | "normal" | "low"
   rhythmStability: "high" | "normal" | "low"
+  _t?: number
 }
 
 function pickMimeType(): string {
@@ -186,6 +187,36 @@ export function useVoiceRecorder() {
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const recordingBlobRef = useRef<Blob | null>(null)
+  const lastUpdateMtimeRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/sentiment');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.mtime && lastUpdateMtimeRef.current !== data.mtime) {
+            lastUpdateMtimeRef.current = data.mtime;
+            
+            setIsAnalyzing(true);
+            setTimeout(() => {
+               setResult({
+                  emotion: data.emotion,
+                  confidence: data.confidence,
+                  distribution: buildEmotionDistributionFromFeatures(data.emotion, data.confidence, { rms: 0.05, spectralHighRatio: 0.5, timeVariance: 0.05 }),
+                  pitchVariation: "normal",
+                  speechEnergy: "normal",
+                  rhythmStability: "normal",
+                  _t: Date.now()
+               });
+               setIsAnalyzing(false);
+            }, 800);
+          }
+        }
+      } catch (e) {}
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
