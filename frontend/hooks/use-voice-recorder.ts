@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import type { EmotionType } from "@/components/emotion-display"
 import type { EmotionDistribution } from "@/lib/emotion-distribution"
 import { buildEmotionDistributionFromFeatures } from "@/lib/emotion-distribution"
@@ -189,34 +189,7 @@ export function useVoiceRecorder() {
   const recordingBlobRef = useRef<Blob | null>(null)
   const lastUpdateMtimeRef = useRef<number | null>(null)
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/sentiment');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.mtime && lastUpdateMtimeRef.current !== data.mtime) {
-            lastUpdateMtimeRef.current = data.mtime;
-            
-            setIsAnalyzing(true);
-            setTimeout(() => {
-               setResult({
-                  emotion: data.emotion,
-                  confidence: data.confidence,
-                  distribution: buildEmotionDistributionFromFeatures(data.emotion, data.confidence, { rms: 0.05, spectralHighRatio: 0.5, timeVariance: 0.05 }),
-                  pitchVariation: "normal",
-                  speechEnergy: "normal",
-                  rhythmStability: "normal",
-                  _t: Date.now()
-               });
-               setIsAnalyzing(false);
-            }, 800);
-          }
-        }
-      } catch (e) {}
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  const lastUpdateMtimeRef = useRef<number | null>(null);
 
   const startRecording = useCallback(async () => {
     try {
@@ -307,26 +280,6 @@ export function useVoiceRecorder() {
     setRecordingHint(null)
     const durationSec = started ? (Date.now() - started) / 1000 : 0
 
-    let features: ReturnType<typeof sampleAudioFeatures> | null = null
-    const ctx = audioContextRef.current
-    const analyser = analyserRef.current
-    if (analyser && ctx && ctx.state !== "closed") {
-      if (ctx.state === "suspended") {
-        try {
-          await ctx.resume()
-        } catch {
-          /* ignore */
-        }
-      }
-      if (ctx.state === "running") {
-        try {
-          features = sampleAudioFeaturesBest(analyser)
-        } catch {
-          features = null
-        }
-      }
-    }
-
     const mr = mediaRecorderRef.current
     await new Promise<void>((resolve) => {
       if (!mr || mr.state === "inactive") {
@@ -387,12 +340,32 @@ export function useVoiceRecorder() {
 
     setIsAnalyzing(true)
 
-    const inferred = inferEmotionFromFeatures(features, durationSec)
-
-    window.setTimeout(() => {
-      setResult(inferred)
-      setIsAnalyzing(false)
-    }, inferred ? 750 : 380)
+    const blob = recordingBlobRef.current
+    if (blob) {
+      const formData = new FormData()
+      formData.append('voiceBlob', blob, 'recording.webm')
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData,
+        })
+        if (response.ok) {
+           const data = await response.json();
+           setResult({
+              emotion: data.emotion,
+              confidence: data.confidence,
+              distribution: buildEmotionDistributionFromFeatures(data.emotion, data.confidence, { rms: 0.05, spectralHighRatio: 0.5, timeVariance: 0.05 }),
+              pitchVariation: "normal",
+              speechEnergy: "normal",
+              rhythmStability: "normal",
+              _t: data._t || Date.now()
+           });
+        }
+      } catch (err) {
+         console.error('Analysis failed', err)
+      }
+    }
+    setIsAnalyzing(false)
   }, [])
 
   const toggleRecording = useCallback(() => {
