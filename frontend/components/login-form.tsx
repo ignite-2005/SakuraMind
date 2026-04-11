@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Sparkles } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DashboardBackground } from "@/components/dashboard-background"
@@ -16,6 +17,7 @@ export function LoginForm() {
   const { login, user, loading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -33,7 +35,7 @@ export function LoginForm() {
     e.preventDefault()
     setError(null)
     setPending(true)
-    const res = await login(email, password)
+    const res = await login(email, password, rememberMe)
     setPending(false)
     if (res.error) {
       setError(res.error)
@@ -90,6 +92,17 @@ export function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-background/50"
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="remember-me"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+                disabled={pending}
+              />
+              <Label htmlFor="remember-me" className="text-sm text-muted-foreground">
+                Remember me
+              </Label>
             </div>
             {error ? (
               <p className="text-sm text-destructive" role="alert">

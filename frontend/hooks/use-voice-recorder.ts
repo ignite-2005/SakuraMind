@@ -189,8 +189,6 @@ export function useVoiceRecorder() {
   const recordingBlobRef = useRef<Blob | null>(null)
   const lastUpdateMtimeRef = useRef<number | null>(null)
 
-  const lastUpdateMtimeRef = useRef<number | null>(null);
-
   const startRecording = useCallback(async () => {
     try {
       chunksRef.current = []

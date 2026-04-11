@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const tempWavPath = path.join(projectRoot, 'temp.wav');
     const scriptsPath = path.join(projectRoot, 'venv', 'Scripts', 'python.exe');
     const pythonExe = fs.existsSync(scriptsPath) ? `"${scriptsPath}"` : 'python';
-    const inferenceScript = path.join(projectRoot, 'inference.py');
+    const inferenceScript = path.join(projectRoot, 'backend', 'inference.py');
 
     // Make sure old files are removed to avoid caching issues
     if (fs.existsSync(tempWavPath)) fs.unlinkSync(tempWavPath);

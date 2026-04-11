@@ -1,123 +1,347 @@
-# 🌸 SakuraMind  
-### AI-Powered Early Burnout Detection System
+# SakuraMind
 
-![status](https://img.shields.io/badge/status-active-brightgreen)
-![event](https://img.shields.io/badge/event-hackathon-blue)
-![AI](https://img.shields.io/badge/AI-powered-orange)
-![focus](https://img.shields.io/badge/focus-student%20wellbeing-purple)
-![type](https://img.shields.io/badge/type-predictive%20analytics-yellow)
+AI-powered voice emotion analysis with real-time spectrogram visualization, trend tracking, and session reporting.
+
+SakuraMind combines a Next.js frontend with a Python inference pipeline to classify emotion from voice clips and present actionable wellness insights.
+
+## Table of Contents
+
+1. Project Overview
+2. Core Capabilities
+3. Architecture
+4. Repository Structure
+5. Technology Stack
+6. Quick Start
+7. Detailed Setup
+8. API Reference
+9. Authentication Model
+10. Model Training Pipeline
+11. Development Scripts
+12. Known Limitations
+13. Troubleshooting
+14. Roadmap
+
+## Project Overview
+
+SakuraMind is a hackathon project focused on early emotional-state awareness through voice analysis. The application captures short audio clips, generates mel spectrograms, runs neural inference, and stores report history for trend analysis.
+
+The current implementation is optimized for local/demo use and rapid iteration.
+
+## Core Capabilities
+
+- Real-time voice capture in browser
+- Minimum-length recording validation before analysis
+- Mel spectrogram visualization
+- Emotion prediction and confidence scoring
+- Emotion trend history and report browser
+- Session-local report locking/unlocking with passphrase
+- Local account system with optional Remember me session persistence
+- Theme and brightness controls
+
+## Architecture
+
+SakuraMind uses a hybrid flow:
+
+1. User records audio in the frontend.
+2. Frontend posts audio blob to Next.js API route.
+3. API route converts WebM to WAV with ffmpeg.
+4. API route invokes Python inference script.
+5. Python script loads model, predicts emotion, writes artifacts:
+   - mel.png
+   - history.txt
+6. API returns normalized emotion + confidence to frontend.
+7. Frontend stores enriched report metadata in browser storage.
+
+High-level data path:
+
+Frontend (Next.js) -> /api/analyze -> Python (backend/inference.py) -> Model (Model/emotion_model.pth)
+
+## Repository Structure
+
+```text
+SakuraMind/
+  backend/
+    inference.py
+    main.py
+    demo_update.py
+  frontend/
+    app/
+      (app)/
+        dashboard/
+        voice/
+        reports/
+        settings/
+      api/
+        analyze/
+        sentiment/
+        mel/
+      login/
+      signup/
+      page.tsx
+    components/
+    hooks/
+    lib/
+    package.json
+  Model/
+    emotion_model.pth
+    scripts/
+      organize_dataset.py
+      convert_spectrograms.py
+      train.py
+      fix_cremad.py
+    dataset/
+    spectrograms/
+  history.txt
+  mel.png
+  README.md
+```
+
+## Technology Stack
+
+### Frontend
+
+- Next.js 16.2.0
+- React 19.2.4
+- TypeScript 5.7.3
+- Tailwind CSS 4
+- Radix UI components
+- Recharts
+
+### Backend / ML
+
+- Python
+- PyTorch + timm (ResNet18-based classifier)
+- librosa
+- matplotlib
+- numpy
+- Pillow
+
+## Quick Start
+
+### 1) Start Frontend
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+Frontend runs at http://localhost:3000.
+
+### 2) Ensure Python Dependencies Are Installed
+
+From project root:
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+pip install torch torchvision timm librosa matplotlib numpy pillow scipy sounddevice keyboard pydub
+```
+
+Also install ffmpeg and ensure it is available on PATH for reliable WebM -> WAV conversion.
+
+## Detailed Setup
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm (or npm)
+- Python 3.9+
+- ffmpeg in PATH
+
+### Install Frontend Dependencies
+
+```bash
+cd frontend
+pnpm install
+```
+
+### Install Backend Dependencies
+
+```bash
+cd ..
+python -m venv venv
+venv\Scripts\activate
+pip install torch torchvision timm librosa matplotlib numpy pillow scipy sounddevice keyboard pydub
+```
+
+### Run Application
+
+```bash
+cd frontend
+pnpm dev
+```
+
+No additional backend server process is required; Python is invoked by API route handlers.
+
+## API Reference
+
+### POST /api/analyze
+
+Analyzes uploaded voice blob.
+
+Request:
+
+- Content-Type: multipart/form-data
+- Field: voiceBlob
+
+Response (success):
+
+```json
+{
+  "emotion": "happy",
+  "confidence": 92,
+  "_t": 1711111111111
+}
+```
+
+Notes:
+
+- Emotion classes are normalized to: happy, sad, angry, neutral
+- fearful maps to angry
+- calm maps to neutral
+
+### GET /api/sentiment
+
+Returns latest entry from history.txt.
+
+Response (success):
+
+```json
+{
+  "emotion": "neutral",
+  "confidence": 74,
+  "mtime": 1711111111111
+}
+```
+
+### GET /api/mel
+
+Returns mel.png as image/png.
+
+## Authentication Model
+
+Authentication is currently client-side and local-only:
+
+- Accounts are stored in browser localStorage
+- Passwords are SHA-256 hashed client-side
+- Session persistence supports Remember me behavior:
+  - Checked: persistent login via localStorage
+  - Unchecked: session-only login via sessionStorage
+
+Important: This is suitable for demos/prototypes, not production-grade authentication.
+
+## Model Training Pipeline
+
+Training assets and scripts are in Model/scripts.
+
+### Dataset Preparation
+
+1. Organize source audio into unified classes:
+
+```bash
+cd Model
+python scripts/organize_dataset.py
+```
+
+2. Convert wav files to mel spectrogram PNGs:
+
+```bash
+python scripts/convert_spectrograms.py
+```
+
+### Train Model
+
+```bash
+python scripts/train.py
+```
+
+Training details in current script:
+
+- Backbone: resnet18 (timm)
+- Epochs: 15
+- Batch size: 32
+- Image size: 224
+- Two-phase training: frozen backbone then full fine-tuning
+
+### Inference (CLI)
+
+```bash
+python backend/inference.py temp.wav
+```
+
+Script prints JSON wrapped with sentinels for API parsing and appends latest result to history.txt.
+
+## Development Scripts
+
+### Frontend
+
+```bash
+cd frontend
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+```
+
+### API Smoke Test
+
+An additional test script exists:
+
+```bash
+cd frontend
+node test_api.js
+```
+
+It posts audio.wav to local /api/analyze.
+
+## Known Limitations
+
+- No requirements.txt file yet for Python dependencies
+- API route executes Python through child_process per request
+- Auth is client-side only
+- next.config.mjs allows TypeScript build errors (ignoreBuildErrors: true)
+- history.txt and mel.png are local mutable artifacts
+- ffmpeg fallback path copies WebM directly to WAV filename, which may fail on some environments
+
+## Troubleshooting
+
+### Python script not found or dependency errors
+
+- Verify venv exists at project_root/venv
+- Ensure dependencies are installed into that venv
+- Confirm python command is accessible in terminal fallback
+
+### ffmpeg conversion errors
+
+- Install ffmpeg and add to PATH
+- Retry with a clean temp.webm/temp.wav
+
+### No emotion result in UI
+
+- Confirm microphone permissions are granted
+- Record at least 4 seconds
+- Check API response in browser network tab for /api/analyze
+
+### Build issues hidden in production
+
+- Run pnpm lint and resolve TypeScript issues proactively
+- Consider removing ignoreBuildErrors after stabilization
+
+## Roadmap
+
+- Replace client-only auth with server-side authentication
+- Add requirements.txt and environment bootstrap scripts
+- Add structured backend service instead of per-request process execution
+- Add test coverage for API routes, auth flows, and report features
+- Add deployment profiles for cloud inference or containerized runtime
 
 ---
 
-## 🧠 Overview
-SakuraMind is an AI-driven system designed to **detect early signs of burnout in students before it becomes critical**. Instead of reacting to stress after it occurs, SakuraMind focuses on **predicting emotional decline** using daily inputs and pattern tracking.
+If you want, this README can be extended further with screenshots, an architecture diagram, and contributor guidelines tailored for open-source collaboration.
 
-Inspired by the lifecycle of cherry blossoms 🌸, the system visually represents a user’s mental well-being, making it intuitive, engaging, and actionable.
+## Documentation Map
 
----
-
-## 🎯 Problem Statement
-Students often experience gradual burnout due to:
-- Academic pressure and deadlines  
-- Irregular sleep patterns  
-- Lack of awareness of mental fatigue  
-
-Most existing solutions:
-- React only after severe stress  
-- Provide generic suggestions  
-- Do not track long-term behavioral patterns  
-
----
-
-## 💡 Solution
-SakuraMind introduces a **predictive approach to mental wellness** by:
-- Capturing daily emotional inputs through micro-journaling  
-- Analyzing sentiment and behavioral signals  
-- Tracking patterns over time  
-- Detecting early signs of burnout  
-- Providing meaningful, actionable insights  
-
----
-
-## ⚙️ How It Works
-
-1. User writes a short daily journal entry  
-2. System analyzes emotional tone and key indicators  
-3. Entries are converted into structured scores  
-4. Trends are tracked across multiple days  
-5. Burnout risk is detected using pattern analysis  
-6. Results are visualized using a cherry blossom model 🌸  
-7. Users receive early warnings and helpful suggestions  
-
----
-
-## 🌸 Core Features
-
-- 📝 **Micro-Journaling**  
-  Quick daily reflections to capture mood and energy  
-
-- 📉 **Trend Tracking**  
-  Monitors emotional patterns over time  
-
-- ⚠️ **Early Burnout Detection**  
-  Identifies risk before it becomes critical  
-
-- 🌸 **Bloom Visualization (USP)**  
-  - 🌸 Full Bloom → Healthy  
-  - 🍂 Falling Petals → Warning  
-  - 🌑 Bare Branch → Burnout  
-
-- 🎯 **Actionable Insights**  
-  Personalized suggestions based on detected patterns  
-
----
-
-## 🌟 Innovation
-
-- Predictive rather than reactive approach  
-- Combines emotional analysis with behavioral trends  
-- Uses intuitive visual storytelling (cherry blossom metaphor)  
-- Focused specifically on student lifestyle challenges  
-
----
-
-## 🗺️ Implementation Plan
-
-### Phase 1: Foundation
-- Build simple journaling interface  
-- Store daily user inputs  
-
-### Phase 2: Analysis
-- Convert entries into emotional scores  
-- Identify key indicators (energy, focus, stress)  
-
-### Phase 3: Pattern Detection
-- Track trends over multiple entries  
-- Detect decline in emotional and productivity levels  
-
-### Phase 4: Visualization
-- Map user state to cherry blossom stages  
-- Create an intuitive dashboard  
-
-### Phase 5: Insights & Suggestions
-- Generate early warnings  
-- Provide personalized improvement strategies  
-
----
-
-## 🚀 Future Scope
-
-- Voice-based journaling  
-- Integration with wearable data (sleep/activity)  
-- Advanced predictive models  
-- Mobile application deployment  
-
----
-
-## 🏁 Conclusion
-SakuraMind transforms mental health tracking into a **proactive and predictive system**. By identifying burnout early and presenting it through meaningful visuals, it empowers individuals to take control of their well-being—just like a cherry blossom that blooms again after every fall 🌸.
-
----
-
-## ⭐ Tagline
-**"Detect burnout before it detects you."**
+- Frontend documentation: [frontend/README.md](frontend/README.md)
+- Backend documentation: [backend/README.md](backend/README.md)
+- Model and training documentation: [Model/README.md](Model/README.md)

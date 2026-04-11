@@ -18,14 +18,17 @@ export function Waveform({ isRecording, analyser }: WaveformProps) {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Set canvas resolution for sharp rendering
     const dpr = window.devicePixelRatio || 1
-    const rect = canvas.getBoundingClientRect()
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
-    ctx.scale(dpr, dpr)
 
     const draw = () => {
+      const rect = canvas.getBoundingClientRect()
+      
+      if (Math.abs(canvas.width - rect.width * dpr) > 1 || Math.abs(canvas.height - rect.height * dpr) > 1) {
+        canvas.width = rect.width * dpr
+        canvas.height = rect.height * dpr
+        ctx.scale(dpr, dpr)
+      }
+
       const width = rect.width
       const height = rect.height
 

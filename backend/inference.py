@@ -15,7 +15,9 @@ warnings.filterwarnings("ignore")
 def do_inference(audio_path):
     # Load model
     try:
-        checkpoint = torch.load('emotion_model.pth', map_location='cpu')
+        import os
+        MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'Model', 'emotion_model.pth')
+        checkpoint = torch.load(MODEL_PATH, map_location='cpu')
         CLASS_NAMES = checkpoint['classes']
         model = timm.create_model('resnet18', pretrained=False, num_classes=len(CLASS_NAMES))
         model.load_state_dict(checkpoint['model_state'])

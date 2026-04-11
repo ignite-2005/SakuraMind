@@ -17,7 +17,8 @@ import os
 # ============================================================
 print("🔧 Loading emotion model...")
 
-checkpoint = torch.load('emotion_model.pth', map_location='cpu')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'Model', 'emotion_model.pth')
+checkpoint = torch.load(MODEL_PATH, map_location='cpu')
 CLASS_NAMES = checkpoint['classes']
 
 model = timm.create_model('resnet18', pretrained=False, num_classes=len(CLASS_NAMES))

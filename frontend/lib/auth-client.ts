@@ -7,6 +7,7 @@ export type UserRecord = {
 
 const USERS_KEY = "sakuramind_users_v1"
 const SESSION_KEY = "sakuramind_session_v1"
+const TRANSIENT_SESSION_KEY = "sakuramind_session_tmp_v1"
 
 function loadUsers(): UserRecord[] {
   if (typeof window === "undefined") return []
@@ -36,6 +37,14 @@ export async function hashPassword(password: string): Promise<string> {
 export function getSession(): Session | null {
   if (typeof window === "undefined") return null
   try {
+    const transientRaw = sessionStorage.getItem(TRANSIENT_SESSION_KEY)
+    if (transientRaw) {
+      const transient = JSON.parse(transientRaw) as Session
+      if (transient && typeof transient.email === "string") {
+        return { email: transient.email }
+      }
+    }
+
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const s = JSON.parse(raw) as Session
@@ -46,10 +55,22 @@ export function getSession(): Session | null {
   }
 }
 
-export function setSession(session: Session | null) {
+export function setSession(session: Session | null, remember = true) {
   if (typeof window === "undefined") return
-  if (!session) localStorage.removeItem(SESSION_KEY)
-  else localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  if (!session) {
+    localStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(TRANSIENT_SESSION_KEY)
+    return
+  }
+
+  if (remember) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    sessionStorage.removeItem(TRANSIENT_SESSION_KEY)
+    return
+  }
+
+  sessionStorage.setItem(TRANSIENT_SESSION_KEY, JSON.stringify(session))
+  localStorage.removeItem(SESSION_KEY)
 }
 
 export async function registerUser(
@@ -74,6 +95,7 @@ export async function registerUser(
 export async function loginUser(
   email: string,
   password: string,
+  remember = true,
 ): Promise<{ error: string } | { session: Session }> {
   const normalized = email.trim().toLowerCase()
   const users = loadUsers()
@@ -84,7 +106,7 @@ export async function loginUser(
   if (hash !== user.passwordHash) return { error: "Invalid email or password." }
 
   const session = { email: user.email }
-  setSession(session)
+  setSession(session, remember)
   return { session }
 }
 
