@@ -13,19 +13,21 @@ Built at the intersection of Artificial Intelligence, Wellness Technology, and U
 ## Table of Contents
 
 1. Project Overview
-2. Core Capabilities
-3. Architecture
-4. Repository Structure
-5. Technology Stack
-6. Quick Start
-7. Detailed Setup
-8. API Reference
-9. Authentication Model
-10. Model Training Pipeline
-11. Development Scripts
-12. Known Limitations
-13. Troubleshooting
-14. Roadmap
+2. Application Preview
+3. Core Capabilities
+4. Architecture
+5. Repository Structure
+6. Technology Stack
+7. Quick Start
+8. Detailed Setup
+9. API Reference
+10. Authentication Model
+11. Model Training Pipeline
+12. Development Scripts
+13. Known Limitations
+14. Troubleshooting
+15. Roadmap
+16. Documentation Map
 
 ## Project Overview
 
@@ -38,6 +40,38 @@ The system captures short voice recordings, converts them into mel spectrograms,
 The primary objective of SakuraMind is to investigate whether voice-based emotional analysis can provide an accessible and intuitive way for users to monitor emotional well-being before patterns develop into long-term burnout or emotional fatigue.
 
 The current implementation is optimized for local/demo use and rapid iteration.
+
+## 📸 Application Preview
+
+### 🌸 Landing Experience
+
+![Landing Page](assets/images/landing-page.png)
+
+*Clean onboarding experience introducing SakuraMind's mission and workflow.*
+
+---
+
+### 📊 Emotional Dashboard
+
+![Dashboard](assets/images/dashboard.png)
+
+*Track emotional balance, confidence scores, and historical trends through an interactive dashboard.*
+
+---
+
+### 🎤 Voice Analysis
+
+![Voice Analysis](assets/images/voice-analysis.png)
+
+*Record voice samples, generate spectrograms, and perform real-time emotion analysis.*
+
+---
+
+### 📁 Emotional Reports
+
+![Reports](assets/images/reports.png)
+
+*Review previous sessions, analyze emotional patterns, and monitor long-term trends.*
 
 ## Core Capabilities
 
