@@ -61,7 +61,7 @@ The current implementation is optimized for local/demo use and rapid iteration.
 
 ### 🎤 Voice Analysis
 
-![Voice Analysis](assets/images/voice-analysis.png)
+![Voice Analysis](assets/images/voice_analysis.png)
 
 *Record voice samples, generate spectrograms, and perform real-time emotion analysis.*
 
