@@ -159,41 +159,42 @@ Frontend (Next.js) -> /api/analyze -> Python (backend/inference.py) -> Model (Mo
 ## Repository Structure
 
 ```text
-SakuraMind/
-  backend/
-    inference.py
-    main.py
-    demo_update.py
-  frontend/
-    app/
-      (app)/
-        dashboard/
-        voice/
-        reports/
-        settings/
-      api/
-        analyze/
-        sentiment/
-        mel/
-      login/
-      signup/
-      page.tsx
-    components/
-    hooks/
-    lib/
-    package.json
-  Model/
-    emotion_model.pth
-    scripts/
-      organize_dataset.py
-      convert_spectrograms.py
-      train.py
-      fix_cremad.py
-    dataset/
-    spectrograms/
-  history.txt
-  mel.png
-  README.md
+SakuraMind
+│
+├── frontend/                         # Next.js frontend application
+│   ├── app/
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── public/
+│   └── styles/
+│
+├── backend/                          # Python backend & inference
+│   ├── inference.py
+│   ├── main.py
+│   ├── demo_update.py
+│   └── README.md
+│
+├── Model/                            # Machine learning pipeline
+│   ├── scripts/
+│   └── README.md
+│
+├── assets/
+│   ├── branding/
+│   │   └── sakuramind_banner.png
+│   │
+│   └── images/
+│       ├── landing_page.png
+│       ├── dashboard.png
+│       ├── voice_analysis.png
+│       ├── reports.png
+│       ├── report_detail-1.png
+│       ├── report_detail-2.png
+│       └── report_detail-3.png
+│
+├── README.md
+├── .gitignore
+└── get-pip.py
 ```
 
 ## Technology Stack
