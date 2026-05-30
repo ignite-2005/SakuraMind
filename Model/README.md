@@ -1,27 +1,54 @@
 # SakuraMind Model
 
-This folder contains model artifacts, data preparation scripts, and training scripts for voice emotion classification.
+Machine Learning pipeline powering SakuraMind's voice-based emotional analysis system.
+
+The model processes speech recordings, converts them into Mel Spectrogram representations, and performs emotion classification using a fine-tuned ResNet18 architecture.
+
+Supported emotions include:
+
+- Happy
+- Sad
+- Neutral
+- Angry
+
+The output is consumed by the SakuraMind backend to generate emotional balance scores, trend analysis, and AI-generated interpretations.
+
+---
 
 ## Contents
 
 - [emotion_model.pth](emotion_model.pth): trained checkpoint used by backend inference
-- [scripts](scripts): data prep and training scripts
-- [dataset](dataset): prepared train/val WAV hierarchy
-- [spectrograms](spectrograms): generated mel spectrogram images for training
+- [scripts](scripts): data preparation and training scripts
+- [dataset](dataset): prepared train/validation WAV hierarchy
+- [spectrograms](spectrograms): generated mel spectrogram images used for training
+
+---
 
 ## Script Overview
 
-- [scripts/organize_dataset.py](scripts/organize_dataset.py)
-  - scans RAVDESS and CREMA-D
-  - maps labels into unified classes
-  - creates train/val split in dataset
-- [scripts/convert_spectrograms.py](scripts/convert_spectrograms.py)
-  - converts WAV files to mel spectrogram PNG files
-- [scripts/train.py](scripts/train.py)
-  - trains timm resnet18 classifier
-  - saves best checkpoint as emotion_model.pth
-- [scripts/fix_cremad.py](scripts/fix_cremad.py)
-  - re-exports CREMA-D audio files using pydub
+### [scripts/organize_dataset.py](scripts/organize_dataset.py)
+
+- Scans RAVDESS and CREMA-D datasets
+- Maps labels into unified emotion classes
+- Creates train/validation split structure
+
+### [scripts/convert_spectrograms.py](scripts/convert_spectrograms.py)
+
+- Converts WAV files into Mel Spectrogram PNG images
+- Prepares visual inputs for model training
+
+### [scripts/train.py](scripts/train.py)
+
+- Trains a ResNet18 classifier using TIMM
+- Performs fine-tuning strategy
+- Saves best checkpoint as `emotion_model.pth`
+
+### [scripts/fix_cremad.py](scripts/fix_cremad.py)
+
+- Re-exports CREMA-D audio files using Pydub
+- Resolves compatibility issues during preprocessing
+
+---
 
 ## Training Pipeline
 
@@ -30,6 +57,7 @@ From repository root:
 ```bash
 venv\Scripts\activate
 cd Model
+
 python scripts/organize_dataset.py
 python scripts/convert_spectrograms.py
 python scripts/train.py
@@ -37,36 +65,57 @@ python scripts/train.py
 
 Output artifact:
 
-- [emotion_model.pth](emotion_model.pth)
+```text
+emotion_model.pth
+```
 
-## Current Training Config
+---
 
-As defined in [scripts/train.py](scripts/train.py):
+## Current Training Configuration
 
-- Architecture: resnet18 (timm)
-- Epochs: 15
-- Batch size: 32
-- Image size: 224
-- Optimizer: Adam
-- Device: CUDA if available, else CPU
-- Fine-tuning strategy:
-  - freeze backbone initially
-  - unfreeze all layers at epoch 8
+As defined in `scripts/train.py`:
+
+| Parameter | Value |
+|------------|---------|
+| Architecture | ResNet18 (TIMM) |
+| Epochs | 15 |
+| Batch Size | 32 |
+| Image Size | 224 × 224 |
+| Optimizer | Adam |
+| Device | CUDA (if available) / CPU |
+
+### Fine-Tuning Strategy
+
+- Freeze backbone initially
+- Train classification head
+- Unfreeze all layers at Epoch 8
+- Continue end-to-end fine-tuning
+
+---
 
 ## Label Mapping Notes
 
-Dataset scripts merge source emotion taxonomies to a common set for this project. Frontend display currently focuses on:
+Dataset preparation scripts merge multiple emotion taxonomies into a common set for SakuraMind.
 
-- happy
-- sad
-- angry
-- neutral
+Frontend presentation currently focuses on:
 
-Some classes are normalized at inference/UI boundary (for example calm and fearful remapping).
+- Happy
+- Sad
+- Angry
+- Neutral
+
+Some source labels are normalized during inference and UI processing.
+
+Examples:
+
+- Calm → Neutral
+- Fearful → Stressed / Neutral (depending on mapping strategy)
+
+---
 
 ## Dependencies
 
-Typical Python dependencies used by scripts:
+Core libraries used throughout the pipeline:
 
 - torch
 - torchvision
@@ -78,8 +127,68 @@ Typical Python dependencies used by scripts:
 - pydub
 - tqdm
 
+Install requirements:
+
+```bash
+pip install torch torchvision timm librosa matplotlib numpy pillow pydub tqdm
+```
+
+---
+
 ## Data and Artifact Notes
 
-- Large datasets and intermediate artifacts are intentionally ignored in git
-- Check [.gitignore](../.gitignore) for current exclusion rules
-- Keep [emotion_model.pth](emotion_model.pth) aligned with class metadata expected by backend
+- Large datasets are intentionally excluded from Git
+- Intermediate training artifacts are ignored
+- Model checkpoints should remain synchronized with backend class metadata
+- Refer to the repository `.gitignore` for exclusion rules
+
+---
+
+## Model Workflow
+
+```text
+Voice Recording
+        ↓
+Audio Preprocessing
+        ↓
+Mel Spectrogram Generation
+        ↓
+ResNet18 Emotion Classifier
+        ↓
+Emotion Prediction
+        ↓
+Backend Analysis
+        ↓
+Balance Score & Insights
+        ↓
+SakuraMind Dashboard
+```
+
+---
+
+## Future Improvements
+
+Planned enhancements for future versions:
+
+- Additional emotion classes
+- Larger and more diverse speech datasets
+- Transformer-based audio architectures
+- Confidence calibration
+- Real-time streaming inference
+- Longitudinal emotional trend modeling
+- Improved multi-speaker robustness
+- Personalized emotional baseline tracking
+
+---
+
+## Project Role in SakuraMind
+
+This model serves as the analytical core of SakuraMind, enabling:
+
+- Voice emotion detection
+- Emotional balance estimation
+- Trend monitoring across sessions
+- AI-generated emotional interpretations
+- Historical emotional reporting
+
+The long-term vision is to evolve SakuraMind into a more comprehensive emotional well-being platform powered by voice-based behavioral intelligence.
