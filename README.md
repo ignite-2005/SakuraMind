@@ -71,7 +71,23 @@ The current implementation is optimized for local/demo use and rapid iteration.
 
 ![Reports](assets/images/reports.png)
 
-*Review previous sessions, analyze emotional patterns, and monitor long-term trends.*
+<p align="center">
+  <img src="assets/images/report_detail-1.png" width="90%">
+</p>
+
+*Archived session overview showing spectrogram reconstruction, recorded audio playback, and voice signal metrics.*
+
+<p align="center">
+  <img src="assets/images/report_detail-2.png" width="90%">
+</p>
+
+*Emotion distribution analysis including affect blend, emotional balance indicators, and speech characteristics.*
+
+<p align="center">
+  <img src="assets/images/report_detail-3.png" width="90%">
+</p>
+
+*AI-generated interpretation with emotional assessment and actionable insights derived from voice analysis.*
 
 ## Core Capabilities
 
