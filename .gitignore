@@ -6,11 +6,17 @@ spectrograms/
 venv/
 __pycache__/
 
-# temporary files
+# Temporary files
 audio.wav
 mel.png
 history.txt
 
-# model weights
+# Model weights
 *.pth
 *.pt
+
+# Environment
+.env
+
+# Node
+node_modules/
