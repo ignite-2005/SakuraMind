@@ -2,11 +2,7 @@
   <img src="assets/branding/sakuramind_banner.png" alt="SakuraMind Banner" width="100%">
 </p>
 
-# 🌸 SakuraMind
-
-> Detect emotional signals before they become burnout.
-
-### Voice • Emotion • Insight
+## 🌸 AI-Powered Emotional Wellness Platform
 
 SakuraMind is an AI-powered emotional wellness platform that transforms voice recordings into meaningful emotional insights.
 
@@ -33,7 +29,13 @@ Built at the intersection of Artificial Intelligence, Wellness Technology, and U
 
 ## Project Overview
 
-SakuraMind is a hackathon project focused on early emotional-state awareness through voice analysis. The application captures short audio clips, generates mel spectrograms, runs neural inference, and stores report history for trend analysis.
+SakuraMind is an AI-powered emotional wellness platform that explores how voice signals can be used to better understand emotional patterns and behavioral trends.
+
+The system captures short voice recordings, converts them into mel spectrograms, performs machine learning inference, and generates emotional insights that can be tracked over time.
+
+### Key Goal
+
+The primary objective of SakuraMind is to investigate whether voice-based emotional analysis can provide an accessible and intuitive way for users to monitor emotional well-being before patterns develop into long-term burnout or emotional fatigue.
 
 The current implementation is optimized for local/demo use and rapid iteration.
 
