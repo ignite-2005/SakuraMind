@@ -1,8 +1,14 @@
-# SakuraMind
+# 🌸 SakuraMind
 
-AI-powered voice emotion analysis with real-time spectrogram visualization, trend tracking, and session reporting.
+> Detect emotional signals before they become burnout.
 
-SakuraMind combines a Next.js frontend with a Python inference pipeline to classify emotion from voice clips and present actionable wellness insights.
+### Voice • Emotion • Insight
+
+SakuraMind is an AI-powered emotional wellness platform that transforms voice recordings into meaningful emotional insights.
+
+By combining audio signal processing, machine learning, and behavioral analytics, SakuraMind helps users better understand emotional patterns through voice-based analysis, trend tracking, and personalized reporting.
+
+Built at the intersection of Artificial Intelligence, Wellness Technology, and User-Centered Design.
 
 ## Table of Contents
 
