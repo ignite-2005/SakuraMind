@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/branding/sakuramind_banner.png" alt="SakuraMind Banner" width="100%">
+  <img src="assets/branding/sakuramind_banner.png" width="850">
 </p>
 
 ## 🌸 AI-Powered Emotional Wellness Platform
