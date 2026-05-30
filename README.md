@@ -45,7 +45,7 @@ The current implementation is optimized for local/demo use and rapid iteration.
 
 ### 🌸 Landing Experience
 
-![Landing Page](assets/images/landing-page.png)
+![Landing Page](assets/images/landing_page.png)
 
 *Clean onboarding experience introducing SakuraMind's mission and workflow.*
 
