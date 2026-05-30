@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/branding/sakuramind_banner.png" alt="SakuraMind Banner" width="100%">
+</p>
+
 # 🌸 SakuraMind
 
 > Detect emotional signals before they become burnout.
