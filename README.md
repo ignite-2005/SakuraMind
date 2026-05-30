@@ -41,16 +41,54 @@ The current implementation is optimized for local/demo use and rapid iteration.
 
 ## Core Capabilities
 
-- Real-time voice capture in browser
-- Minimum-length recording validation before analysis
-- Mel spectrogram visualization
-- Emotion prediction and confidence scoring
-- Emotion trend history and report browser
-- Session-local report locking/unlocking with passphrase
-- Local account system with optional Remember me session persistence
-- Theme and brightness controls
+### 🎤 Voice Analysis
+- Real-time voice recording in the browser
+- Minimum-length recording validation
+- Automatic audio preprocessing
+
+### 🧠 Emotion Detection
+- Mel spectrogram generation
+- ResNet18-based emotion classification
+- Confidence score estimation
+
+### 📊 Emotional Insights
+- Emotion trend tracking
+- Historical session analysis
+- Emotional balance monitoring
+
+### 📁 Report Management
+- Session report browser
+- Report locking and unlocking
+- Local report persistence
+
+### ⚙️ Personalization
+- Theme customization
+- Brightness controls
+- Remember Me session persistence
 
 ## Architecture
+
+```text
+User Voice
+    │
+    ▼
+Next.js Frontend
+    │
+    ▼
+Audio Processing (FFmpeg)
+    │
+    ▼
+Python Inference Engine
+    │
+    ▼
+ResNet18 Emotion Model
+    │
+    ▼
+Emotion Analysis
+    │
+    ▼
+Reports & Dashboard
+```
 
 SakuraMind uses a hybrid flow:
 
@@ -110,23 +148,42 @@ SakuraMind/
 
 ## Technology Stack
 
-### Frontend
+### 🎨 Frontend
 
-- Next.js 16.2.0
-- React 19.2.4
-- TypeScript 5.7.3
+- Next.js 16
+- React 19
+- TypeScript
 - Tailwind CSS 4
-- Radix UI components
+- Radix UI
 - Recharts
 
-### Backend / ML
+### ⚙️ Backend
+
+- Next.js API Routes
+- Node.js Runtime
+- FFmpeg Audio Processing
+
+### 🧠 Machine Learning
 
 - Python
-- PyTorch + timm (ResNet18-based classifier)
-- librosa
-- matplotlib
-- numpy
+- PyTorch
+- TIMM (ResNet18)
+- Librosa
+- NumPy
+- Matplotlib
 - Pillow
+
+### 💾 Data Storage
+
+- Browser localStorage
+- Browser sessionStorage
+- Local report history
+
+### 🛠 Development Tools
+
+- pnpm
+- Git
+- VS Code
 
 ## Quick Start
 
