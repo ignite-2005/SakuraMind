@@ -22,6 +22,8 @@ interface AnalysisResult {
   pitchVariation: "high" | "normal" | "low"
   speechEnergy: "high" | "normal" | "low"
   rhythmStability: "high" | "normal" | "low"
+  /** Base64 PNG data URL of the mel spectrogram, when the backend provides it */
+  mel?: string
   _t?: number
 }
 
@@ -356,6 +358,7 @@ export function useVoiceRecorder() {
               pitchVariation: "normal",
               speechEnergy: "normal",
               rhythmStability: "normal",
+              mel: data.mel,
               _t: data._t || Date.now()
            });
         } else {

@@ -135,10 +135,23 @@ export function EmotionDashboard() {
     const t = window.setTimeout(() => {
       savedSigRef.current = sig
       void (async () => {
-        const snapshot =
-          capturedSpectrogramRef.current ??
-          spectrogramRef.current?.getSnapshot() ??
-          undefined
+        let snapshot: string | undefined = result.mel
+        if (!snapshot) {
+          try {
+            const res = await fetch(`/api/mel?t=${Date.now()}`)
+            if (res.ok) {
+              const blob = await res.blob()
+              snapshot = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader()
+                reader.onloadend = () => resolve(reader.result as string)
+                reader.onerror = reject
+                reader.readAsDataURL(blob)
+              })
+            }
+          } catch (e) {
+            console.error("Failed to fetch mel spectrogram image:", e)
+          }
+        }
 
         const balance = computeBalanceScore(result.emotion, result.confidence)
         const prev = loadReports()[0]
@@ -239,7 +252,7 @@ export function EmotionDashboard() {
           <div className="min-h-[180px] overflow-hidden rounded-xl relative">
             {(!isRecording && !isAnalyzing && result) ? (
               // @ts-ignore
-              <img src={`/api/mel?t=${result._t || Date.now()}`} alt="Mel Spectrogram" className="h-52 w-full object-cover" style={{ width: "100%", height: "208px" }} />
+              <img src={result.mel || `/api/mel?t=${result._t || Date.now()}`} alt="Mel Spectrogram" className="h-52 w-full object-contain" style={{ width: "100%", height: "208px" }} />
             ) : (
               <Spectrogram
                 ref={spectrogramRef}

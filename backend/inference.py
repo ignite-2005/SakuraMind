@@ -2,6 +2,7 @@ import sys
 import json
 import os
 import io
+import base64
 import warnings
 import numpy as np
 import torch
@@ -67,6 +68,34 @@ def predict(model, class_names, audio_path):
         probs = torch.softmax(model(tensor), dim=1)[0]
     top_idx = int(probs.argmax().item())
     return {"emotion": class_names[top_idx], "confidence": float(probs[top_idx].item())}
+
+
+def spectrogram_data_url(audio_path):
+    """Render the pretty web spectrogram to an in-memory PNG data URL (no disk writes)."""
+    mel_db, sr = _mel_db(audio_path)
+    fig, ax = plt.subplots(figsize=(6, 4))
+    fig.patch.set_facecolor('none')
+    ax.set_facecolor('none')
+    img_spec = librosa.display.specshow(mel_db, sr=sr, x_axis='time', y_axis='mel', ax=ax, cmap='magma')
+    cbar = fig.colorbar(img_spec, ax=ax, format='%+2.0f dB')
+    cbar.ax.yaxis.set_tick_params(color='white')
+    plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='white')
+    cbar.outline.set_edgecolor('white')
+    cbar.ax.yaxis.label.set_color('white')
+    ax.tick_params(colors='white')
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.title.set_color('white')
+    for spine in ax.spines.values():
+        spine.set_edgecolor('white')
+    plt.title('Mel Spectrogram')
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', transparent=True, dpi=150)
+    plt.close(fig)
+    buf.seek(0)
+    b64 = base64.b64encode(buf.read()).decode('ascii')
+    return f"data:image/png;base64,{b64}"
 
 
 # --------------------------------------------------------------------------

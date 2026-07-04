@@ -7,14 +7,14 @@ import path from 'path';
 const execAsync = promisify(exec);
 
 // Normalize the model's raw label to the 4 UI emotions.
-function normalize(rawEmotion: string, rawConfidence: number) {
+function normalize(rawEmotion: string, rawConfidence: number, mel?: string) {
   let emotion = rawEmotion;
   if (emotion === 'fearful') emotion = 'angry';
   if (emotion === 'calm') emotion = 'neutral';
   const valid = ['happy', 'sad', 'angry', 'neutral'];
   if (!valid.includes(emotion)) emotion = 'neutral';
   const confidence = Math.round(rawConfidence * 100);
-  return { emotion, confidence, _t: Date.now() };
+  return { emotion, confidence, mel, _t: Date.now() };
 }
 
 export async function POST(req: NextRequest) {
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
         const text = await res.text();
         return NextResponse.json({ error: `inference API: ${text}` }, { status: 502 });
       }
-      const result = await res.json(); // { emotion, confidence: 0-1 }
-      return NextResponse.json(normalize(result.emotion, parseFloat(result.confidence)));
+      const result = await res.json(); // { emotion, confidence: 0-1, mel }
+      return NextResponse.json(normalize(result.emotion, parseFloat(result.confidence), result.mel));
     }
 
     // ---- LOCAL MODE: spawn the Python script directly (dev only) ----

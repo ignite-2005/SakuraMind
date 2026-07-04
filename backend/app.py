@@ -12,7 +12,7 @@ torch.set_num_threads(1)  # avoid thread thrashing on constrained CPU
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from inference import load_model, predict
+from inference import load_model, predict, spectrogram_data_url
 
 app = FastAPI(title="SakuraMind Inference API")
 
@@ -56,6 +56,8 @@ async def analyze(voiceBlob: UploadFile = File(...)):
             raise HTTPException(500, f"ffmpeg failed: {e.stderr.decode()[:300]}")
 
         try:
-            return predict(MODEL, CLASS_NAMES, wav)  # {"emotion": ..., "confidence": 0-1}
+            result = predict(MODEL, CLASS_NAMES, wav)  # {"emotion": ..., "confidence": 0-1}
+            result["mel"] = spectrogram_data_url(wav)  # base64 PNG data URL for the UI
+            return result
         except Exception as e:
             raise HTTPException(500, f"inference failed: {e}")
