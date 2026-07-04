@@ -1,6 +1,13 @@
 import os
+# Writable cache dir for matplotlib/numba on read-only/limited hosts (must be set before imports)
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/mpl")
+os.environ.setdefault("NUMBA_CACHE_DIR", "/tmp/numba")
+
 import tempfile
 import subprocess
+
+import torch
+torch.set_num_threads(1)  # avoid thread thrashing on constrained CPU
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,7 +50,7 @@ async def analyze(voiceBlob: UploadFile = File(...)):
         try:
             subprocess.run(
                 ["ffmpeg", "-i", src, "-ar", "44100", "-ac", "1", wav, "-y"],
-                check=True, capture_output=True,
+                check=True, capture_output=True, timeout=60,
             )
         except subprocess.CalledProcessError as e:
             raise HTTPException(500, f"ffmpeg failed: {e.stderr.decode()[:300]}")

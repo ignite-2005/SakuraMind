@@ -358,9 +358,14 @@ export function useVoiceRecorder() {
               rhythmStability: "normal",
               _t: data._t || Date.now()
            });
+        } else {
+           const text = await response.text().catch(() => '')
+           console.error('Analyze failed:', response.status, text)
+           alert(`Analysis failed (${response.status}). ${text.slice(0, 200)}`)
         }
       } catch (err) {
          console.error('Analysis failed', err)
+         alert(`Analysis request failed: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
     setIsAnalyzing(false)
