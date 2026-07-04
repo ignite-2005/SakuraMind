@@ -1,0 +1,13 @@
+# CPU-only PyTorch wheels keep the Docker image small (~1 GB vs ~5 GB for GPU)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2
+torchvision==0.17.2
+timm==0.9.16
+librosa==0.10.2.post1
+numpy==1.26.4
+matplotlib==3.8.4
+pillow==10.3.0
+scipy==1.13.0
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9

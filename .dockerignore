@@ -1,0 +1,16 @@
+frontend/
+venv/
+node_modules/
+Model/Actor_*
+Model/CREMA-D-master/
+Model/dataset/
+Model/spectrograms/
+CREMA-D-master.zip
+*.wav
+*.webm
+mel.png
+history.txt
+.git/
+__pycache__/
+*.pyc
+assets/
