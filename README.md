@@ -10,6 +10,9 @@ By combining audio signal processing, machine learning, and behavioral analytics
 
 Built at the intersection of Artificial Intelligence, Wellness Technology, and User-Centered Design.
 
+**🔗 Live demo:** https://sakura-mind.vercel.app
+**🧠 Inference API:** https://ignite2005-sakuramind.hf.space (FastAPI on Hugging Face Spaces)
+
 ## Table of Contents
 
 1. Project Overview
@@ -20,14 +23,15 @@ Built at the intersection of Artificial Intelligence, Wellness Technology, and U
 6. Technology Stack
 7. Quick Start
 8. Detailed Setup
-9. API Reference
-10. Authentication Model
-11. Model Training Pipeline
-12. Development Scripts
-13. Known Limitations
-14. Troubleshooting
-15. Roadmap
-16. Documentation Map
+9. Deployment
+10. API Reference
+11. Authentication Model
+12. Model Training Pipeline
+13. Development Scripts
+14. Known Limitations
+15. Troubleshooting
+16. Roadmap
+17. Documentation Map
 
 ## Project Overview
 
@@ -39,7 +43,7 @@ The system captures short voice recordings, converts them into mel spectrograms,
 
 The primary objective of SakuraMind is to investigate whether voice-based emotional analysis can provide an accessible and intuitive way for users to monitor emotional well-being before patterns develop into long-term burnout or emotional fatigue.
 
-The current implementation is optimized for local/demo use and rapid iteration.
+The application is **deployed as two services**: a Next.js frontend on Vercel and a containerized FastAPI + PyTorch inference backend on Hugging Face Spaces. It also runs fully locally for development.
 
 ## 📸 Application Preview
 
@@ -118,43 +122,47 @@ The current implementation is optimized for local/demo use and rapid iteration.
 
 ## Architecture
 
+SakuraMind runs as two decoupled services in production, with a self-contained local mode for development.
+
 ```text
-User Voice
-    │
-    ▼
-Next.js Frontend
-    │
-    ▼
-Audio Processing (FFmpeg)
-    │
-    ▼
-Python Inference Engine
-    │
-    ▼
-ResNet18 Emotion Model
-    │
-    ▼
-Emotion Analysis
-    │
-    ▼
-Reports & Dashboard
+                          ┌──────────────────────────────┐
+   Browser (mic) ───────► │  Next.js Frontend (Vercel)   │
+                          │  /api/analyze  (proxy route) │
+                          └───────────────┬──────────────┘
+                                          │  multipart voiceBlob
+                                          ▼
+                          ┌──────────────────────────────┐
+                          │  FastAPI Backend (HF Spaces) │
+                          │  Docker + ffmpeg             │
+                          │  1. WebM → WAV (ffmpeg)      │
+                          │  2. WAV → mel spectrogram    │
+                          │  3. ResNet18 inference       │
+                          │  4. render web spectrogram   │
+                          └───────────────┬──────────────┘
+                                          │  { emotion, confidence, mel }
+                                          ▼
+                          ┌──────────────────────────────┐
+                          │  Frontend renders result,    │
+                          │  saves report to localStorage│
+                          └──────────────────────────────┘
 ```
 
-SakuraMind uses a hybrid flow:
+### Production flow (hosted)
 
-1. User records audio in the frontend.
-2. Frontend posts audio blob to Next.js API route.
-3. API route converts WebM to WAV with ffmpeg.
-4. API route invokes Python inference script.
-5. Python script loads model, predicts emotion, writes artifacts:
-   - mel.png
-   - history.txt
-6. API returns normalized emotion + confidence to frontend.
-7. Frontend stores enriched report metadata in browser storage.
+1. User records audio in the browser.
+2. Frontend posts the audio blob to the Next.js API route `/api/analyze`.
+3. When `INFERENCE_API_URL` is set, the route **proxies** the blob to the FastAPI backend.
+4. The backend converts WebM → WAV (ffmpeg), builds a mel spectrogram, runs ResNet18 inference, and renders the web spectrogram in memory.
+5. The backend returns `{ emotion, confidence, mel }` — where `mel` is a base64 PNG data URL (no files written to disk).
+6. The frontend normalizes the label, renders the emotion + spectrogram, and stores the report in browser storage.
 
-High-level data path:
+### Local development flow
 
-Frontend (Next.js) -> /api/analyze -> Python (backend/inference.py) -> Model (Model/emotion_model.pth)
+When `INFERENCE_API_URL` is **not** set, the same `/api/analyze` route falls back to spawning the Python script (`backend/inference.py`) as a subprocess via `child_process` — no separate server needed. This keeps local iteration fast.
+
+High-level data path (hosted):
+
+Browser → Vercel `/api/analyze` → HF Spaces FastAPI `/analyze` → ResNet18 (`Model/emotion_model.pth`)
 
 ## Repository Structure
 
@@ -163,26 +171,31 @@ SakuraMind
 │
 ├── frontend/                         # Next.js frontend application
 │   ├── app/
+│   │   └── api/analyze/route.ts      # proxy to backend (hosted) / subprocess (local)
 │   ├── components/
 │   ├── hooks/
 │   ├── lib/
 │   ├── public/
 │   └── styles/
 │
-├── backend/                          # Python backend & inference
-│   ├── inference.py
-│   ├── main.py
+├── backend/                          # Python inference service
+│   ├── app.py                        # FastAPI server (/health, /analyze)
+│   ├── inference.py                  # model load, prediction, spectrogram rendering
+│   ├── requirements.txt              # pinned Python dependencies (CPU torch)
+│   ├── main.py                       # local interactive recording script
 │   ├── demo_update.py
 │   └── README.md
 │
 ├── Model/                            # Machine learning pipeline
 │   ├── scripts/
+│   ├── emotion_model.pth             # trained weights (git-ignored; see Model/README)
 │   └── README.md
 │
+├── Dockerfile                        # containerizes the FastAPI backend (Python + ffmpeg)
+├── .dockerignore
 ├── assets/
 │   ├── branding/
 │   │   └── sakuramind_banner.png
-│   │
 │   └── images/
 │       ├── landing_page.png
 │       ├── dashboard.png
@@ -193,8 +206,7 @@ SakuraMind
 │       └── report_detail-3.png
 │
 ├── README.md
-├── .gitignore
-└── get-pip.py
+└── .gitignore
 ```
 
 ## Technology Stack
@@ -208,21 +220,26 @@ SakuraMind
 - Radix UI
 - Recharts
 
-### ⚙️ Backend
+### ⚙️ Inference Backend
 
-- Next.js API Routes
-- Node.js Runtime
-- FFmpeg Audio Processing
+- FastAPI (Uvicorn)
+- Python 3.11
+- FFmpeg audio processing
+- Docker
 
 ### 🧠 Machine Learning
 
-- Python
 - PyTorch
 - TIMM (ResNet18)
 - Librosa
 - NumPy
 - Matplotlib
 - Pillow
+
+### ☁️ Hosting
+
+- Vercel (frontend)
+- Hugging Face Spaces — Docker (inference backend)
 
 ### 💾 Data Storage
 
@@ -233,32 +250,32 @@ SakuraMind
 ### 🛠 Development Tools
 
 - pnpm
-- Git
+- Git / Git LFS
 - VS Code
 
 ## Quick Start
 
-### 1) Start Frontend
+### Option A — Frontend against the hosted backend (simplest)
 
 ```bash
 cd frontend
 pnpm install
+# point the app at the deployed inference API
+echo "INFERENCE_API_URL=https://ignite2005-sakuramind.hf.space" > .env.local
 pnpm dev
 ```
 
-Frontend runs at http://localhost:3000.
+Frontend runs at http://localhost:3000 and uses the hosted model — no local Python needed.
 
-### 2) Ensure Python Dependencies Are Installed
-
-From project root:
+### Option B — Fully local (frontend + local Python inference)
 
 ```bash
-python -m venv venv
-venv\Scripts\activate
-pip install torch torchvision timm librosa matplotlib numpy pillow scipy sounddevice keyboard pydub
+cd frontend
+pnpm install
+pnpm dev            # do NOT set INFERENCE_API_URL — enables local subprocess mode
 ```
 
-Also install ffmpeg and ensure it is available on PATH for reliable WebM -> WAV conversion.
+In another shell, ensure Python deps and ffmpeg are available (see Detailed Setup).
 
 ## Detailed Setup
 
@@ -266,8 +283,8 @@ Also install ffmpeg and ensure it is available on PATH for reliable WebM -> WAV 
 
 - Node.js 18+
 - pnpm (or npm)
-- Python 3.9+
-- ffmpeg in PATH
+- Python 3.11+ (for local inference mode)
+- ffmpeg in PATH (for local inference mode)
 
 ### Install Frontend Dependencies
 
@@ -276,34 +293,68 @@ cd frontend
 pnpm install
 ```
 
-### Install Backend Dependencies
+### Environment variable
+
+The frontend selects its mode from a single variable:
+
+| `INFERENCE_API_URL` | Behaviour |
+|---------------------|-----------|
+| set (e.g. the HF Spaces URL) | Hosted mode — proxies audio to the FastAPI backend |
+| unset | Local mode — spawns `backend/inference.py` as a subprocess |
+
+Create `frontend/.env.local` (see `frontend/.env.example`).
+
+### Install Backend Dependencies (local mode only)
 
 ```bash
 cd ..
 python -m venv venv
-venv\Scripts\activate
-pip install torch torchvision timm librosa matplotlib numpy pillow scipy sounddevice keyboard pydub
+venv\Scripts\activate          # Windows (use source venv/bin/activate on macOS/Linux)
+pip install -r backend/requirements.txt
 ```
 
-### Run Application
+Also install ffmpeg and ensure it is on PATH for reliable WebM → WAV conversion.
+
+### Run the backend as a server locally (optional)
+
+You can run the same FastAPI service the cloud uses:
 
 ```bash
-cd frontend
-pnpm dev
+cd backend
+uvicorn app:app --host 0.0.0.0 --port 7860
+# then set INFERENCE_API_URL=http://localhost:7860 in frontend/.env.local
 ```
 
-No additional backend server process is required; Python is invoked by API route handlers.
+## Deployment
+
+### Frontend — Vercel
+
+1. Import the repository into Vercel (root directory: `frontend`).
+2. Add an environment variable: `INFERENCE_API_URL = https://<your-space>.hf.space`.
+3. Deploy. Vercel redeploys automatically on every push to the default branch.
+
+### Backend — Hugging Face Spaces (Docker)
+
+The `Dockerfile` at the repository root builds the inference service (Python 3.11 + ffmpeg + PyTorch), copies `backend/` and `Model/emotion_model.pth`, and serves FastAPI on port `7860`.
+
+1. Create a new Space with SDK = **Docker**, hardware = CPU (2 vCPU / 16 GB is sufficient).
+2. Push the `Dockerfile`, `backend/`, and `Model/emotion_model.pth` to the Space repo (the 43 MB model is tracked with Git LFS).
+3. The Space builds and serves at `https://<user>-<space>.hf.space`.
+
+CORS: the backend allows the Vercel origin and `localhost:3000` by default; override with the `ALLOWED_ORIGINS` env var (comma-separated).
+
+> Note: the model runs on CPU. A container with real CPU/RAM (e.g. HF Spaces CPU basic) is required — inference is not viable on heavily throttled free tiers (e.g. ~0.1 vCPU).
 
 ## API Reference
 
-### POST /api/analyze
+### Frontend — `POST /api/analyze`
 
-Analyzes uploaded voice blob.
+Analyzes an uploaded voice blob. In hosted mode this proxies to the backend; in local mode it runs Python directly.
 
 Request:
 
-- Content-Type: multipart/form-data
-- Field: voiceBlob
+- Content-Type: `multipart/form-data`
+- Field: `voiceBlob`
 
 Response (success):
 
@@ -311,33 +362,45 @@ Response (success):
 {
   "emotion": "happy",
   "confidence": 92,
+  "mel": "data:image/png;base64,iVBORw0KGgo...",
   "_t": 1711111111111
 }
 ```
 
 Notes:
 
-- Emotion classes are normalized to: happy, sad, angry, neutral
-- fearful maps to angry
-- calm maps to neutral
+- `confidence` is a 0–100 percentage (the backend returns 0–1; the frontend scales it).
+- `mel` is a base64 PNG data URL of the spectrogram, rendered by the backend.
+- Emotion classes are normalized to: happy, sad, angry, neutral (`fearful` → angry, `calm` → neutral).
 
-### GET /api/sentiment
+### Backend — `POST /analyze` (FastAPI)
 
-Returns latest entry from history.txt.
+Request:
+
+- Content-Type: `multipart/form-data`
+- Field: `voiceBlob`
 
 Response (success):
 
 ```json
 {
-  "emotion": "neutral",
-  "confidence": 74,
-  "mtime": 1711111111111
+  "emotion": "calm",
+  "confidence": 0.21,
+  "mel": "data:image/png;base64,iVBORw0KGgo..."
 }
 ```
 
-### GET /api/mel
+### Backend — `GET /health`
 
-Returns mel.png as image/png.
+Returns service status and the model's class list:
+
+```json
+{ "status": "ok", "classes": ["angry", "calm", "fearful", "happy", "neutral", "sad"] }
+```
+
+### Frontend — `GET /api/sentiment`, `GET /api/mel` (local mode)
+
+These endpoints read local artifacts (`history.txt`, `mel.png`) produced by the local Python path. In hosted mode the spectrogram is delivered inline via the `mel` field of `/api/analyze` instead.
 
 ## Authentication Model
 
@@ -349,7 +412,7 @@ Authentication is currently client-side and local-only:
   - Checked: persistent login via localStorage
   - Unchecked: session-only login via sessionStorage
 
-Important: This is suitable for demos/prototypes, not production-grade authentication.
+Important: This is suitable for demos/prototypes, not production-grade authentication. Server-side auth (salted hashing + server sessions) is on the roadmap.
 
 ## Model Training Pipeline
 
@@ -390,7 +453,7 @@ Training details in current script:
 python backend/inference.py temp.wav
 ```
 
-Script prints JSON wrapped with sentinels for API parsing and appends latest result to history.txt.
+Script prints JSON wrapped with sentinels for API parsing (used by local subprocess mode) and appends the latest result to history.txt.
 
 ## Development Scripts
 
@@ -406,8 +469,6 @@ pnpm lint
 
 ### API Smoke Test
 
-An additional test script exists:
-
 ```bash
 cd frontend
 node test_api.js
@@ -417,48 +478,48 @@ It posts audio.wav to local /api/analyze.
 
 ## Known Limitations
 
-- No requirements.txt file yet for Python dependencies
-- API route executes Python through child_process per request
-- Auth is client-side only
-- next.config.mjs allows TypeScript build errors (ignoreBuildErrors: true)
-- history.txt and mel.png are local mutable artifacts
-- ffmpeg fallback path copies WebM directly to WAV filename, which may fail on some environments
+- Auth is client-side only (no server-side verification)
+- `next.config.mjs` allows TypeScript build errors (`ignoreBuildErrors: true`)
+- Local mode writes mutable artifacts (`history.txt`, `mel.png`); hosted mode is stateless
+- Report/sentiment history is stored per-browser (localStorage), not cross-device
+- On idle, the Hugging Face Space sleeps; the first request after a pause incurs a cold-start delay
 
 ## Troubleshooting
-
-### Python script not found or dependency errors
-
-- Verify venv exists at project_root/venv
-- Ensure dependencies are installed into that venv
-- Confirm python command is accessible in terminal fallback
-
-### ffmpeg conversion errors
-
-- Install ffmpeg and add to PATH
-- Retry with a clean temp.webm/temp.wav
 
 ### No emotion result in UI
 
 - Confirm microphone permissions are granted
 - Record at least 4 seconds
-- Check API response in browser network tab for /api/analyze
+- Check the `/api/analyze` response in the browser network tab
+- First request after inactivity may take ~30s while the backend wakes
 
-### Build issues hidden in production
+### Hosted backend errors
 
-- Run pnpm lint and resolve TypeScript issues proactively
-- Consider removing ignoreBuildErrors after stabilization
+- Check the Space is **Running** (Hugging Face Space → Logs)
+- Verify `GET /health` returns the class list
+- Confirm `INFERENCE_API_URL` on Vercel matches the Space URL (no trailing slash)
+
+### ffmpeg conversion errors (local mode)
+
+- Install ffmpeg and add it to PATH
+- Retry with a clean temp.webm/temp.wav
+
+### Python script not found (local mode)
+
+- Verify the venv exists at project_root/venv
+- Ensure dependencies are installed from `backend/requirements.txt`
 
 ## Roadmap
 
-- Replace client-only auth with server-side authentication
-- Add requirements.txt and environment bootstrap scripts
-- Add structured backend service instead of per-request process execution
-- Add test coverage for API routes, auth flows, and report features
-- Add deployment profiles for cloud inference or containerized runtime
+- [x] Add `requirements.txt` and a containerized backend
+- [x] Replace per-request subprocess with a structured FastAPI service (hosted)
+- [x] Deploy frontend (Vercel) and inference backend (Hugging Face Spaces)
+- [ ] Replace client-only auth with server-side authentication
+- [ ] Persist report/sentiment history in a database (cross-device)
+- [ ] Add test coverage for API routes, auth flows, and report features
+- [ ] Remove `ignoreBuildErrors` after resolving TypeScript issues
 
 ---
-
-If you want, this README can be extended further with screenshots, an architecture diagram, and contributor guidelines tailored for open-source collaboration.
 
 ## Documentation Map
 
